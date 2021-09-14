@@ -61,13 +61,16 @@ def matchHist():
         deaths = match.find('span', class_='Death').text.replace('\t', '')
         assists = match.find('span', class_='Assist').text.replace('\t', '')
         KDA_ratio = match.find('span', class_='KDARatio').text.replace('\t', '')
+        csTotal = match.find('span', class_='CS tip').text.replace('\t', '')
+        csMin = csTotal.split('(')[1].replace(')','')
+        csTotal = csTotal.split('(')[0]
         date = match.find('div',class_='TimeStamp').text
         champUrl = match.find('img',class_="Image")
         champImg = "https:"+champUrl.get('src').split("?")[0]
     
         
 
-        matchHistory = [summoner,gameType,gameRes,gameLen,kills,deaths,assists,KDA_ratio,date,champImg,pfp]
+        matchHistory = [summoner,gameType,gameRes,gameLen,kills,deaths,assists,KDA_ratio,date,champImg,pfp,csTotal,csMin]
         historyArray.append(matchHistory)
     
     return(historyArray)
@@ -83,13 +86,6 @@ GUILD = os.getenv('DISCORD_GUILD')
 
 client = commands.Bot(command_prefix="!")
 
-prefix = '!'
-
-# Function lets users change the prefix so it doesn't conflict with other bots.
-def changePrefix (newPrefix): 
-    global prefix
-    prefix = newPrefix
-
 def setUser (leagueName):
     global my_url 
     new_url = 'https://na.op.gg/summoner/userName=' + leagueName
@@ -100,38 +96,6 @@ client = commands.Bot(command_prefix = '.')
 @client.event
 async def on_ready():
     print("I'm ready {0.user}.".format(client))
-
-# @client.event
-# async def on_message(message):
-#     if message.author == client.user:
-#          return
-    
-#     if message.content.startswith(prefix+'hello'):
-#         await message.channel.send('Hello!')
-
-#     if message.content.startswith(prefix+'prefix'):
-#         if message.content[8].isalnum(): 
-#             await message.channel.send("Prefix must be one symbol e.g. !, $, <, >, %...")
-#             pass
-#         else:
-#             changePrefix(message.content[8])
-#             await message.channel.send('The prefix has been changed to ' + message.content[8])
-#             print(prefix)
-
-#     if message.content.startswith(prefix+'stats'):
-#         lolName = message.content.split(" ")
-#         await message.channel.send(lolName[1])
-#         setUser(lolName[1])
-#         playerStats = sendStats()
-#         await message.channel.send(playerStats)
-
-#     if message.content.startswith(prefix+'test'):
-#         await message.channel.send(my_url)
-     
-#     if message.content.startswith(prefix+'send'):
-#         playerStats2 = sendStats()
-#         await message.channel.send(playerStats2)
-
 
 def colourCheck(matchHistory, game):
     if matchHistory[game][2] == "Victory":
@@ -144,19 +108,6 @@ async def history(ctx, lolName):
     await ctx.send(lolName)
     setUser(lolName)
     matchHistory = matchHist()
-    #await ctx.send(matchHistory)
-
-    # await ctx.send(matchAmount)
-    # if matchAmount == "()":
-    #     matchAmount = len(matchHistory)
-    # if not str(matchAmount).isnumeric():
-    #     ctx.send('Please specify a valid number of matches')
-    #     return 0
-    # if matchAmount > len(matchHistory):
-    #     matchAmount = len(matchHistory)
-
-   # matchHistory = [summoner,gameType,gameRes,gameLen,kills,deaths,assists,KDA_ratio,date,champImg]
-
 
     for game in range (len(matchHistory)):
         embed = discord.Embed(
@@ -164,7 +115,7 @@ async def history(ctx, lolName):
         description= ("**Game Duration**"+"```"+matchHistory[game][3])+"```",
         colour = colourCheck(matchHistory, game)
         )
-
+       
 
         embed.set_thumbnail(url=matchHistory[game][9])
         embed.set_author(name=matchHistory[game][0], icon_url=matchHistory[game][10], url=my_url)
@@ -172,7 +123,8 @@ async def history(ctx, lolName):
         embed.add_field(name='Deaths', value="```"+matchHistory[game][5]+"```", inline=True)
         embed.add_field(name='Assists', value="```"+matchHistory[game][6]+"```", inline=True)
         embed.add_field(name='KDA', value="```"+matchHistory[game][7]+"```", inline=True)
-
+        embed.add_field(name='CS', value="```"+matchHistory[game][11]+"```", inline=True)
+        embed.add_field(name='CS/min', value="```"+matchHistory[game][12]+"```", inline=True)
         embed.set_footer(text=matchHistory[game][8])
         await ctx.send(embed=embed)
     
