@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup as soup
 import requests
 from urllib.request  import urlopen as uReq
 from dotenv import load_dotenv
+from csv import writer
 
 
 global my_url 
@@ -18,6 +19,9 @@ global page_soup
 page = requests.get(my_url)
 page_soup = soup(page.content, 'html.parser')
 
+
+
+#will implement bot command + embeds for summoner stats and create .csv export for their ratings in the future
 def sendStats():
     page = requests.get(my_url)
     page_soup = soup(page.content, 'html.parser')
@@ -45,35 +49,43 @@ def matchHist():
     page = requests.get(my_url)
     page_soup = soup(page.content, 'html.parser')
     summoner = page_soup.find('span', class_='Name').text
-
     pfpUrl = page_soup.find('div',class_="ProfileIcon")
     pfp = 'https:'+pfpUrl.img.get('src').split("?")[0]
-
     matchContainer = page_soup.find_all('div', class_='GameItemWrap')
     historyArray = []
-    for match in matchContainer:    
-        gameType = match.find('div', class_='GameType').text.replace('\t', '')
-        gameType = gameType.replace('\n','')
-        gameRes = match.find('div', class_='GameResult').text.replace('\t', '')
-        gameRes = gameRes.replace('\n','')
-        gameLen = match.find('div', class_='GameLength').text.replace('\t', '')
-        kills = match.find('span', class_='Kill').text.replace('\t', '')
-        deaths = match.find('span', class_='Death').text.replace('\t', '')
-        assists = match.find('span', class_='Assist').text.replace('\t', '')
-        KDA_ratio = match.find('span', class_='KDARatio').text.replace('\t', '')
-        csTotal = match.find('span', class_='CS tip').text.replace('\t', '')
-        csMin = csTotal.split('(')[1].replace(')','')
-        csTotal = csTotal.split('(')[0]
-        date = match.find('div',class_='TimeStamp').text
-        champUrl = match.find('img',class_="Image")
-        champImg = "https:"+champUrl.get('src').split("?")[0]
-    
-        
 
-        matchHistory = [summoner,gameType,gameRes,gameLen,kills,deaths,assists,KDA_ratio,date,champImg,pfp,csTotal,csMin]
-        historyArray.append(matchHistory)
+    #Every time someone runs the .history [playername] command, the match history will be exported to a .csv file.
+    #path = r"C:\Users\Mike\Desktop\code\discord"
+    with open('matchhistory.csv', 'w', encoding='utf8', newline='') as f:
+        fwriter = writer(f)
+        header = ['Date', 'PFP', 'Summoner', 'Champion', 'Game Type', 'Game Result', 'Game Length', 'Kills', 'Deaths', 'Assists', 'KDA', 'CS', 'CS/min']
+        fwriter.writerow(header)
+        for match in matchContainer:    
+            gameType = match.find('div', class_='GameType').text.replace('\t', '')
+            gameType = gameType.replace('\n','')
+            gameRes = match.find('div', class_='GameResult').text.replace('\t', '')
+            gameRes = gameRes.replace('\n','')
+            gameLen = match.find('div', class_='GameLength').text.replace('\t', '')
+            kills = match.find('span', class_='Kill').text.replace('\t', '')
+            deaths = match.find('span', class_='Death').text.replace('\t', '')
+            assists = match.find('span', class_='Assist').text.replace('\t', '')
+            KDA_ratio = match.find('span', class_='KDARatio').text.replace('\t', '')
+            csTotal = match.find('span', class_='CS tip').text.replace('\t', '')
+            csMin = csTotal.split('(')[1].replace(')','')
+            csTotal = csTotal.split('(')[0]
+            date = match.find('div',class_='TimeStamp').text
+            champUrl = match.find('img',class_="Image")
+            champImg = "https:"+champUrl.get('src').split("?")[0]
+        
+            
+
+            matchHistory = [date,pfp,summoner,champImg,gameType,gameRes,gameLen,kills,deaths,assists,KDA_ratio,csTotal,csMin]
+            historyArray.append(matchHistory)
+            fwriter.writerow(matchHistory)
+            #f.write(summoner + "," + pfp + "," + gameType + "," + gameRes + "," + gameLen + "," + kills + "," + deaths + "," + assists + "," + KDA_ratio + "," + csTotal + "," + date + "," + champUrl + "," + champImg)
+        
+        return(historyArray)
     
-    return(historyArray)
 
 ####         ####
 # Discord Bot 
@@ -84,7 +96,6 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 
-client = commands.Bot(command_prefix="!")
 
 def setUser (leagueName):
     global my_url 
@@ -105,28 +116,29 @@ def colourCheck(matchHistory, game):
 
 @client.command()
 async def history(ctx, lolName):
-    await ctx.send(lolName)
+
     setUser(lolName)
     matchHistory = matchHist()
 
     for game in range (len(matchHistory)):
         embed = discord.Embed(
-        title = (matchHistory[game][1]+" "+matchHistory[game][2]),
-        description= ("**Game Duration**"+"```"+matchHistory[game][3])+"```",
+        title = (matchHistory[game][4]+" "+matchHistory[game][5]),
+        description= ("**Game Duration**"+"```"+matchHistory[game][6])+"```",
         colour = colourCheck(matchHistory, game)
         )
        
-
-        embed.set_thumbnail(url=matchHistory[game][9])
-        embed.set_author(name=matchHistory[game][0], icon_url=matchHistory[game][10], url=my_url)
-        embed.add_field(name='Kills', value="```"+matchHistory[game][4]+"```", inline=True)
-        embed.add_field(name='Deaths', value="```"+matchHistory[game][5]+"```", inline=True)
-        embed.add_field(name='Assists', value="```"+matchHistory[game][6]+"```", inline=True)
-        embed.add_field(name='KDA', value="```"+matchHistory[game][7]+"```", inline=True)
+    #matchHistory = [date,pfp,summoner,champImg,gameType,gameRes,gameLen,kills,deaths,assists,KDA_ratio,csTotal,csMin]
+                    #   0  1   2       3       4       5      6      7     8         9         10      11     12
+        embed.set_thumbnail(url=matchHistory[game][3])
+        embed.set_author(name=matchHistory[game][2], icon_url=matchHistory[game][1], url=my_url)
+        embed.add_field(name='Kills', value="```"+matchHistory[game][7]+"```", inline=True)
+        embed.add_field(name='Deaths', value="```"+matchHistory[game][8]+"```", inline=True)
+        embed.add_field(name='Assists', value="```"+matchHistory[game][9]+"```", inline=True)
+        embed.add_field(name='KDA', value="```"+matchHistory[game][10]+"```", inline=True)
         embed.add_field(name='CS', value="```"+matchHistory[game][11]+"```", inline=True)
         embed.add_field(name='CS/min', value="```"+matchHistory[game][12]+"```", inline=True)
-        embed.set_footer(text=matchHistory[game][8])
+        embed.set_footer(text=matchHistory[game][0])
         await ctx.send(embed=embed)
     
-       
+        
 client.run(TOKEN)
