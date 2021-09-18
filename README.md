@@ -1,5 +1,6 @@
 # LeagueStats
 **Page is a W.I.P**
+
 A Discord bot I've been diligently working on to compile player statistics for League of Legends! 
 Utilizes Beautiful Soup library to web scrape data from op.gg and exports data to a .CSV table.
 
