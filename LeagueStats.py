@@ -1,6 +1,6 @@
 ##LeagueStats by Mike Kim
 # W.I.P
-
+#Currently resolving user header to bypass a request block by op.gg (scraper is detected as a bot).
 import os
 import discord
 from discord.ext import commands
