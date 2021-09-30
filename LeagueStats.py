@@ -1,6 +1,6 @@
 ##LeagueStats by Mike Kim
 # W.I.P
-#Currently resolving user header to bypass a request block by op.gg (scraper is detected as a bot).
+
 import os
 import discord
 from discord.ext import commands
@@ -16,14 +16,14 @@ my_url = 'https://na.op.gg/summoner/userName='
 
 global page
 global page_soup
-page = requests.get(my_url)
+page = requests.get(my_url, headers={"User-Agent":"Mozilla/5.0"})
 page_soup = soup(page.content, 'html.parser')
 
 
 
 #will implement bot command + embeds for summoner stats and create .csv export for their ratings in the future
 def sendStats():
-    page = requests.get(my_url)
+    page = requests.get(my_url, headers={"User-Agent":"Mozilla/5.0"})
     page_soup = soup(page.content, 'html.parser')
     summonerContainer = page_soup.find_all('div', class_='SideContent')
     summonerInfo = []
@@ -46,9 +46,10 @@ def sendStats():
 
 
 def matchHist():
-    page = requests.get(my_url)
+    page = requests.get(my_url, headers={"User-Agent":"Mozilla/5.0"})
     page_soup = soup(page.content, 'html.parser')
-    summoner = page_soup.find('span', class_='Name').text
+    summoner = page_soup.find('div', class_='Profile')
+    summoner = summoner.find('span', class_='Name').text
     pfpUrl = page_soup.find('div',class_="ProfileIcon")
     pfp = 'https:'+pfpUrl.img.get('src').split("?")[0]
     matchContainer = page_soup.find_all('div', class_='GameItemWrap')
@@ -109,7 +110,7 @@ async def on_ready():
     print("I'm ready {0.user}.".format(client))
 
 def colourCheck(matchHistory, game):
-    if matchHistory[game][2] == "Victory":
+    if matchHistory[game][5] == "Victory":
         return discord.Colour.blue()
     else: 
         return discord.Colour.red()
