@@ -2,6 +2,8 @@
 # W.I.P
 
 import os
+from typing import Text
+import typing_extensions
 import discord
 from discord.ext import commands
 from bs4 import BeautifulSoup as soup
@@ -9,6 +11,7 @@ import requests
 from urllib.request  import urlopen as uReq
 from dotenv import load_dotenv
 from csv import writer
+
 
 
 global my_url 
@@ -115,6 +118,8 @@ def colourCheck(matchHistory, game):
     else: 
         return discord.Colour.red()
 
+
+
 @client.command()
 async def history(ctx, lolName):
 
@@ -140,6 +145,9 @@ async def history(ctx, lolName):
         embed.add_field(name='CS/min', value="```"+matchHistory[game][12]+"```", inline=True)
         embed.set_footer(text=matchHistory[game][0])
         await ctx.send(embed=embed)
-    
-        
+      
+async def stats(ctx, lolName):
+    setUser(lolName)
+    userStats = sendStats()
+
 client.run(TOKEN)
