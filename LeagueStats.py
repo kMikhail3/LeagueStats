@@ -31,6 +31,8 @@ def sendStats():
     summonerContainer = page_soup.find_all('div', class_='SideContent')
     summonerInfo = []
     for summ in summonerContainer:
+        summoner = page_soup.find('div', class_='Profile')
+        summoner = summoner.find('span', class_='Name').text
         rankType = summ.find('div',class_='RankType').text.replace('\t', '')
         tierRank = summ.find('div',class_='TierRank').text.replace('\t', '')
         divName = summ.find('div',class_='LeagueName').text.replace('\t', '')
@@ -40,9 +42,11 @@ def sendStats():
         wins = summ.find('span',class_='wins').text.replace('\t', '')
         losses = summ.find('span',class_='losses').text.replace('\t', '')
         winRatio = summ.find('span',class_="winratio").text.replace('\t', '')
-        summonerInfo = [rankType,tierRank,divName,leaguePoints,wins,losses,winRatio]
-        print(summonerInfo)
-        print(rankType)
+        rankPic = summ.find('img',class_="Image")
+        rankPic = "https:"+rankPic.get('src').split("?")[0]
+        
+        summonerInfo = [summoner,rankType,tierRank,divName,leaguePoints,wins,losses,winRatio, rankPic]
+        print(rankPic)
     return(summonerInfo)
 
 #scrapes data from match history
@@ -136,7 +140,7 @@ async def history(ctx, lolName):
     #matchHistory = [date,pfp,summoner,champImg,gameType,gameRes,gameLen,kills,deaths,assists,KDA_ratio,csTotal,csMin]
                     #   0  1   2       3       4       5      6      7     8         9         10      11     12
         embed.set_thumbnail(url=matchHistory[game][3])
-        embed.set_author(name=matchHistory[game][2], icon_url=matchHistory[game][1], url=my_url)
+        #embed.set_author(name=matchHistory[game][2], icon_url=matchHistory[game][1], url=my_url)
         embed.add_field(name='Kills', value="```"+matchHistory[game][7]+"```", inline=True)
         embed.add_field(name='Deaths', value="```"+matchHistory[game][8]+"```", inline=True)
         embed.add_field(name='Assists', value="```"+matchHistory[game][9]+"```", inline=True)
@@ -145,9 +149,31 @@ async def history(ctx, lolName):
         embed.add_field(name='CS/min', value="```"+matchHistory[game][12]+"```", inline=True)
         embed.set_footer(text=matchHistory[game][0])
         await ctx.send(embed=embed)
-      
+
+@client.command()      
 async def stats(ctx, lolName):
+    
     setUser(lolName)
     userStats = sendStats()
+    matchRef=matchHist()
+    ##print(userStats)
+    print(matchRef[3])
 
+    embed = discord.Embed(
+    title = (userStats[0]),
+    description = (userStats[1]),
+    colour = discord.Colour.green()
+    )
+
+    # summonerInfo = [summoner,rankType,tierRank,divName,leaguePoints,wins,losses,winRatio, rankPic]
+                        #0         1        2       3       4           5     6     7          8
+    embed.set_thumbnail(url=userStats[8])
+    embed.set_author(name=userStats[0], icon_url=matchRef[0][1], url=my_url)
+    embed.add_field(name='RankType', value="```"+userStats[1]+"```", inline=True)
+    embed.add_field(name='tierRank', value="```"+userStats[2]+"```", inline=True)
+    embed.add_field(name='divName', value="```"+userStats[3]+"```", inline=True)
+    embed.add_field(name='KDA', value="```"+userStats[4]+"```", inline=True)
+    embed.add_field(name='CS', value="```"+userStats[5]+"```", inline=True)
+    embed.add_field(name='CS/min', value="```"+userStats[6]+"```", inline=True)
+    await ctx.send(embed=embed)
 client.run(TOKEN)
