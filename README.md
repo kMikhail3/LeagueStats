@@ -1,7 +1,7 @@
 # LeagueStats
-**Discontinued due to site changes on op.gg**
+**Needs to be updated after major revamp with OP.gg**
 
-A Discord bot that I have been diligently working on to compile player statistics for League of Legends! 
+A Discord bot that I have diligently worked on to compile player statistics for League of Legends! 
 Utilizes Beautiful Soup library to web scrape data from op.gg and outputs player statistics with pretty Discord embeds!
 The client-side code also supports .CSV exports which can be imported onto Excel and supported spreadsheet applications.
 
